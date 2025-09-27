@@ -7,6 +7,18 @@
     "icon": "./assets/images/icon.png",
     "scheme": "pluto",
     "userInterfaceStyle": "automatic",
+    "linking": {
+      "prefixes": ["pluto://"],
+      "config": {
+        "screens": {
+          "(tabs)": {
+            "screens": {
+              "signup": "kyc-callback"
+            }
+          }
+        }
+      }
+    },
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true

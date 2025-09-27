@@ -15,6 +15,7 @@ export default function TabLayout() {
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
         tabBarButton: HapticTab,
+        tabBarStyle: { display: 'none' },
       }}>
       <Tabs.Screen
         name="index"
@@ -28,6 +29,35 @@ export default function TabLayout() {
         options={{
           title: 'Explore',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="signup"
+        options={{
+          title: 'KYC Verification',
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="bank-connection"
+        options={{
+          title: 'Bank Connection',
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="dashboard"
+        options={{
+          title: 'Dashboard',
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="voice-commands"
+        options={{
+          title: 'Voice Commands',
+          href: null, 
         }}
       />
     </Tabs>
