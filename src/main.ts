@@ -7,10 +7,11 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 
 import {
-  GET_LATEST_BLOCK_TOOL
+  GET_LATEST_BLOCK_TOOL,SEND_FUNDS_TOOL
 } from "./tools/tools.js";
 import { getLatestBlock } from "./tools/requiredtools/getlatestblock/index.js";
-
+import { sendFunds } from "./tools/requiredtools/sendFunds/index.js";
+import { sendFundsInputSchema } from "./tools/requiredtools/sendFunds/schema.js";
 
 async function main() {
   console.error("Starting Polygon MCP server...");
@@ -35,11 +36,25 @@ async function main() {
             const latestBlock = await getLatestBlock();
             return latestBlock;
           }
+          case "send_funds": {
+            const { receiverAddress, amountToSend } = args as {
+              receiverAddress: string;
+              amountToSend: string;
+            };
+
+            const validatedInput = sendFundsInputSchema.parse({
+              receiverAddress,
+              amountToSend,
+            });
+
+            const result = await sendFunds(validatedInput);
+            return result;
+          }
 
           default: {
             throw new Error(
 
-              `Tool '${name}' not found. Available tools: get_latest_block`
+              `Tool '${name}' not found. Available tools: get_latest_block,send_funds`
             );
         }
       }
@@ -64,6 +79,8 @@ async function main() {
 
       tools: [
         GET_LATEST_BLOCK_TOOL,
+        SEND_FUNDS_TOOL,
+
       ],
 
     };
