@@ -24,7 +24,7 @@ export default function DashboardScreen() {
   const [showSendModal, setShowSendModal] = useState(false);
   const [showSwapModal, setShowSwapModal] = useState(false);
   const [userData] = useState<UserData>({
-    ensName: 'alice.eth',
+    ensName: 'aryan.eth',
     walletAddress: '0x742d35Cc6634C0532925a3b8D0C9e3e4c413c123',
     balance: '2.45 rBTC', // Rootstock Bitcoin
   });

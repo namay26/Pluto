@@ -192,7 +192,7 @@ export default function VoiceCommandsScreen() {
           </TouchableOpacity>
           
           <Text style={styles.hintText}>
-            Try: "Send 2 rBTC to alice.eth" or "Check my balance"
+            Try: "Send 2 rBTC to mom.eth" or "Check my balance"
           </Text>
         </View>
 
