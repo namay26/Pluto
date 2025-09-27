@@ -10,99 +10,202 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import OnOffRamp from 'react-native-mtp-onofframp';
 
-export default function BankConnectionScreen() {
-  const [selectedBank, setSelectedBank] = useState<string | null>(null);
-  const [connectionStatus, setConnectionStatus] = useState<'idle' | 'connecting' | 'connected'>('idle');
+export default function FiatOnRampScreen() {
+  const [onRampMethod, setOnRampMethod] = useState<string | null>(null);
+  const [onRampStatus, setOnRampStatus] = useState<'idle' | 'processing' | 'completed'>('idle');
+  const [showMtPelerin, setShowMtPelerin] = useState(false);
 
-  const popularBanks = [
-    { id: 'chase', name: 'Chase Bank', icon: 'card-outline', color: '#0066B2' },
-    { id: 'bofa', name: 'Bank of America', icon: 'card-outline', color: '#E31837' },
-    { id: 'wells', name: 'Wells Fargo', icon: 'card-outline', color: '#D71921' },
-    { id: 'citi', name: 'Citibank', icon: 'card-outline', color: '#DA020E' },
-    { id: 'usbank', name: 'U.S. Bank', icon: 'card-outline', color: '#005EB8' },
-    { id: 'pnc', name: 'PNC Bank', icon: 'card-outline', color: '#FFD100' },
+  const onRampMethods = [
+    { 
+      id: 'mtpelerin', 
+      name: 'MtPelerin', 
+      description: 'Bank transfer, credit card',
+      icon: 'card-outline', 
+      color: '#2196F3',
+      fees: '1-3%',
+      time: '5-30 min'
+    },
+    { 
+      id: 'bank-transfer', 
+      name: 'Bank Transfer', 
+      description: 'Direct bank transfer',
+      icon: 'business-outline', 
+      color: '#4CAF50',
+      fees: '0.5-1%',
+      time: '1-3 days'
+    },
+    { 
+      id: 'credit-card', 
+      name: 'Credit/Debit Card', 
+      description: 'Instant purchase',
+      icon: 'card', 
+      color: '#FF9500',
+      fees: '3-5%',
+      time: 'Instant'
+    },
   ];
 
-  const handleBankSelect = (bankId: string) => {
-    setSelectedBank(bankId);
+  const handleMethodSelect = (methodId: string) => {
+    setOnRampMethod(methodId);
   };
 
-  const handleConnectBank = () => {
-    if (!selectedBank) {
-      Alert.alert('No Bank Selected', 'Please select a bank to connect');
+  const handleStartOnRamp = () => {
+    if (!onRampMethod) {
+      Alert.alert('No Method Selected', 'Please select a payment method to continue');
       return;
     }
 
-    setConnectionStatus('connecting');
+    setOnRampStatus('processing');
 
-    // A Simulation for now, will chagne it later
-    setTimeout(() => {
-      setConnectionStatus('connected');
-      Alert.alert(
-        'Bank Connected Successfully!',
-        'Your bank account has been securely linked to your blockchain wallet.',
-        [
-          {
-            text: 'Continue',
-            onPress: () => {
-              router.replace('/(tabs)/dashboard');
+    if (onRampMethod === 'mtpelerin') {
+      // Show MtPelerin widget
+      setShowMtPelerin(true);
+      setOnRampStatus('idle'); // Reset status when showing widget
+      
+      // For demo: simulate completion after 30 seconds
+      setTimeout(() => {
+        if (showMtPelerin) {
+          setShowMtPelerin(false);
+          setOnRampStatus('completed');
+          Alert.alert(
+            'Demo: Purchase Completed!',
+            'In a real app, this would be triggered by the MtPelerin widget. Your rBTC has been added to your wallet.',
+            [
+              {
+                text: 'Continue to Dashboard',
+                onPress: () => {
+                  router.replace('/(tabs)/dashboard');
+                },
+              },
+            ]
+          );
+        }
+      }, 30000); // 30 seconds demo timeout
+    } else {
+      // Simulate other payment methods
+      setTimeout(() => {
+        setOnRampStatus('completed');
+        Alert.alert(
+          'Purchase Successful!',
+          'Your crypto has been added to your wallet. You can now start using Pluto!',
+          [
+            {
+              text: 'Continue to Dashboard',
+              onPress: () => {
+                router.replace('/(tabs)/dashboard');
+              },
             },
-          },
-        ]
-      );
-    }, 2000);
+          ]
+        );
+      }, 3000);
+    }
   };
+  
+  const handleMtPelerinClose = () => {
+    console.log('MtPelerin widget closed');
+    setShowMtPelerin(false);
+    setOnRampStatus('idle');
+  };
+  
+  // Note: The OnOffRamp component handles success/error internally
+  // For production, you would implement wallet callbacks:
+  // onGetAddresses, onSignPersonalMessage, onSendTransaction
 
-  const handleManualEntry = () => {
+  const handleSkipOnRamp = () => {
     Alert.alert(
-      'Manual Bank Entry',
-      'This feature allows you to manually enter your bank details. Implementation pending.',
+      'Skip Funding?',
+      'You can add funds to your wallet later from the dashboard. Continue without funding?',
       [
-        { text: 'OK' },
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Continue',
+          onPress: () => {
+            router.replace('/(tabs)/dashboard');
+          },
+        },
       ]
     );
   };
+  
+  if (showMtPelerin) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.mtPelerinHeader}>
+          <TouchableOpacity 
+            style={styles.closeButton}
+            onPress={handleMtPelerinClose}
+          >
+            <Ionicons name="close" size={24} color="white" />
+          </TouchableOpacity>
+          <Text style={styles.mtPelerinTitle}>Fund Your Wallet</Text>
+          <View style={styles.placeholder} />
+        </View>
+        <OnOffRamp
+          env="production"
+          onOffRampOptions={{
+            type: 'direct-link',
+            lang: 'en',
+            bdc: 'rBTC', // Rootstock Bitcoin
+            addr: '0x742d35Cc6634C0532925a3b8D0C9e3e4c413c123', // User's wallet address
+            net: 'rsk', // Rootstock network
+            amount: '100', // Default amount in USD
+            'primary-color': 'FF9500',
+            tab: '0'
+          }}
+          containerStyle={styles.mtPelerinWidget}
+        />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
           <View style={styles.header}>
-            <Text style={styles.title}>Connect Your Bank</Text>
+            <Text style={styles.title}>Fund Your Wallet</Text>
             <Text style={styles.subtitle}>
-              Link your bank account to enable seamless crypto-to-fiat transactions
+              Add cryptocurrency to your wallet to start using Pluto. Choose your preferred payment method.
             </Text>
           </View>
 
           <View style={styles.securityCard}>
             <View style={styles.securityHeader}>
               <Ionicons name="shield-checkmark" size={24} color="#4CAF50" />
-              <Text style={styles.securityTitle}>Bank-Grade Security</Text>
+              <Text style={styles.securityTitle}>Secure & Regulated</Text>
             </View>
             <Text style={styles.securityDescription}>
-              Your banking information is encrypted and never stored on our servers. 
-              We use industry-standard security protocols to protect your data.
+              All transactions are processed through regulated financial partners. 
+              Your funds go directly to your self-custodial wallet.
             </Text>
           </View>
 
-          <View style={styles.banksSection}>
-            <Text style={styles.sectionTitle}>Select Your Bank</Text>
-            <View style={styles.banksGrid}>
-              {popularBanks.map((bank) => (
+          <View style={styles.methodsSection}>
+            <Text style={styles.sectionTitle}>Choose Payment Method</Text>
+            <View style={styles.methodsList}>
+              {onRampMethods.map((method) => (
                 <TouchableOpacity
-                  key={bank.id}
+                  key={method.id}
                   style={[
-                    styles.bankCard,
-                    selectedBank === bank.id && styles.bankCardSelected,
+                    styles.methodCard,
+                    onRampMethod === method.id && styles.methodCardSelected,
                   ]}
-                  onPress={() => handleBankSelect(bank.id)}
+                  onPress={() => handleMethodSelect(method.id)}
                 >
-                  <View style={[styles.bankIcon, { backgroundColor: bank.color }]}>
-                    <Ionicons name={bank.icon as any} size={24} color="white" />
+                  <View style={[styles.methodIcon, { backgroundColor: method.color }]}>
+                    <Ionicons name={method.icon as any} size={24} color="white" />
                   </View>
-                  <Text style={styles.bankName}>{bank.name}</Text>
-                  {selectedBank === bank.id && (
+                  <View style={styles.methodInfo}>
+                    <Text style={styles.methodName}>{method.name}</Text>
+                    <Text style={styles.methodDescription}>{method.description}</Text>
+                    <View style={styles.methodDetails}>
+                      <Text style={styles.methodFees}>Fees: {method.fees}</Text>
+                      <Text style={styles.methodTime}>Time: {method.time}</Text>
+                    </View>
+                  </View>
+                  {onRampMethod === method.id && (
                     <View style={styles.selectedIndicator}>
                       <Ionicons name="checkmark-circle" size={20} color="#FF9500" />
                     </View>
@@ -112,65 +215,65 @@ export default function BankConnectionScreen() {
             </View>
           </View>
 
-          <TouchableOpacity style={styles.manualButton} onPress={handleManualEntry}>
-            <Ionicons name="create-outline" size={20} color="#FF9500" />
-            <Text style={styles.manualButtonText}>Enter Bank Details Manually</Text>
-            <Ionicons name="chevron-forward" size={20} color="#FF9500" />
+          <TouchableOpacity style={styles.skipButton} onPress={handleSkipOnRamp}>
+            <Ionicons name="arrow-forward-outline" size={20} color="#A0A0A0" />
+            <Text style={styles.skipButtonText}>Skip for now - Add funds later</Text>
+            <Ionicons name="chevron-forward" size={20} color="#A0A0A0" />
           </TouchableOpacity>
 
-          {connectionStatus !== 'idle' && (
+          {onRampStatus !== 'idle' && (
             <View style={styles.statusCard}>
               <View style={styles.statusHeader}>
-                {connectionStatus === 'connecting' ? (
+                {onRampStatus === 'processing' ? (
                   <>
                     <Ionicons name="sync" size={24} color="#FF9500" />
-                    <Text style={styles.statusTitle}>Connecting...</Text>
+                    <Text style={styles.statusTitle}>Processing Purchase...</Text>
                   </>
                 ) : (
                   <>
                     <Ionicons name="checkmark-circle" size={24} color="#4CAF50" />
-                    <Text style={styles.statusTitle}>Connected Successfully!</Text>
+                    <Text style={styles.statusTitle}>Purchase Completed!</Text>
                   </>
                 )}
               </View>
               <Text style={styles.statusDescription}>
-                {connectionStatus === 'connecting'
-                  ? 'Securely connecting to your bank account...'
-                  : 'Your bank account is now linked to your blockchain wallet.'}
+                {onRampStatus === 'processing'
+                  ? 'Processing your crypto purchase...'
+                  : 'Your rBTC has been added to your wallet.'}
               </Text>
             </View>
           )}
 
           <TouchableOpacity
             style={[
-              styles.connectButton,
-              !selectedBank && styles.connectButtonDisabled,
-              connectionStatus === 'connecting' && styles.connectButtonConnecting,
+              styles.onRampButton,
+              !onRampMethod && styles.onRampButtonDisabled,
+              onRampStatus === 'processing' && styles.onRampButtonProcessing,
             ]}
-            onPress={handleConnectBank}
-            disabled={!selectedBank || connectionStatus === 'connecting'}
+            onPress={handleStartOnRamp}
+            disabled={!onRampMethod || onRampStatus === 'processing'}
           >
-            <Text style={styles.connectButtonText}>
-              {connectionStatus === 'connecting' ? 'Connecting...' : 'Connect Bank Account'}
+            <Text style={styles.onRampButtonText}>
+              {onRampStatus === 'processing' ? 'Processing...' : 'Buy Crypto'}
             </Text>
-            {connectionStatus === 'connecting' && (
-              <Ionicons name="sync" size={20} color="white" style={styles.connectingIcon} />
+            {onRampStatus === 'processing' && (
+              <Ionicons name="sync" size={20} color="white" style={styles.processingIcon} />
             )}
           </TouchableOpacity>
 
           <View style={styles.infoSection}>
-            <Text style={styles.infoTitle}>Why connect your bank?</Text>
+            <Text style={styles.infoTitle}>Why fund your wallet?</Text>
             <View style={styles.infoItem}>
-              <Ionicons name="swap-horizontal" size={16} color="#FF9500" />
-              <Text style={styles.infoText}>Instant crypto-to-cash conversions</Text>
+              <Ionicons name="flash" size={16} color="#FF9500" />
+              <Text style={styles.infoText}>Start using voice commands immediately</Text>
+            </View>
+            <View style={styles.infoItem}>
+              <Ionicons name="send" size={16} color="#FF9500" />
+              <Text style={styles.infoText}>Send crypto to friends via ENS names</Text>
             </View>
             <View style={styles.infoItem}>
               <Ionicons name="trending-up" size={16} color="#FF9500" />
-              <Text style={styles.infoText}>Lower transaction fees</Text>
-            </View>
-            <View style={styles.infoItem}>
-              <Ionicons name="shield-checkmark" size={16} color="#FF9500" />
-              <Text style={styles.infoText}>Secure and regulated transactions</Text>
+              <Text style={styles.infoText}>Access DeFi protocols and trading</Text>
             </View>
           </View>
         </View>
@@ -230,7 +333,7 @@ const styles = StyleSheet.create({
     color: '#A0A0A0',
     lineHeight: 20,
   },
-  banksSection: {
+  methodsSection: {
     marginBottom: 24,
   },
   sectionTitle: {
@@ -239,45 +342,62 @@ const styles = StyleSheet.create({
     color: 'white',
     marginBottom: 16,
   },
-  banksGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+  methodsList: {
+    gap: 12,
   },
-  bankCard: {
-    width: '48%',
+  methodCard: {
     backgroundColor: '#3C3C3E',
     borderRadius: 12,
     padding: 16,
-    marginBottom: 12,
+    flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 2,
     borderColor: 'transparent',
     position: 'relative',
   },
-  bankCardSelected: {
+  methodCardSelected: {
     borderColor: '#FF9500',
   },
-  bankIcon: {
+  methodIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
+    marginRight: 16,
+  },
+  methodInfo: {
+    flex: 1,
+  },
+  methodName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: 'white',
+    marginBottom: 4,
+  },
+  methodDescription: {
+    fontSize: 14,
+    color: '#A0A0A0',
     marginBottom: 8,
   },
-  bankName: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: 'white',
-    textAlign: 'center',
+  methodDetails: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  methodFees: {
+    fontSize: 12,
+    color: '#FF9500',
+  },
+  methodTime: {
+    fontSize: 12,
+    color: '#4CAF50',
   },
   selectedIndicator: {
     position: 'absolute',
-    top: 8,
-    right: 8,
+    top: 16,
+    right: 16,
   },
-  manualButton: {
+  skipButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -286,13 +406,37 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: '#FF9500',
+    borderColor: '#555',
   },
-  manualButtonText: {
+  skipButtonText: {
     fontSize: 16,
-    color: '#FF9500',
+    color: '#A0A0A0',
     fontWeight: '500',
     marginHorizontal: 8,
+  },
+  mtPelerinHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#2C2C2E',
+    borderBottomWidth: 1,
+    borderBottomColor: '#3C3C3E',
+  },
+  closeButton: {
+    padding: 8,
+  },
+  mtPelerinTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: 'white',
+  },
+  placeholder: {
+    width: 40,
+  },
+  mtPelerinWidget: {
+    flex: 1,
   },
   statusCard: {
     backgroundColor: '#3C3C3E',
@@ -315,7 +459,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#A0A0A0',
   },
-  connectButton: {
+  onRampButton: {
     backgroundColor: '#FF9500',
     paddingVertical: 16,
     borderRadius: 25,
@@ -324,18 +468,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 32,
   },
-  connectButtonDisabled: {
+  onRampButtonDisabled: {
     backgroundColor: '#666',
   },
-  connectButtonConnecting: {
+  onRampButtonProcessing: {
     backgroundColor: '#FF9500',
   },
-  connectButtonText: {
+  onRampButtonText: {
     color: 'white',
     fontSize: 18,
     fontWeight: '600',
   },
-  connectingIcon: {
+  processingIcon: {
     marginLeft: 8,
   },
   infoSection: {

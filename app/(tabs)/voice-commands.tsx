@@ -1,323 +1,241 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
-  ScrollView,
-  Switch,
   Alert,
+  Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 
-interface MCPServer {
+interface VoiceCommand {
   id: string;
-  name: string;
-  description: string;
-  capabilities: string[];
-  chains: string[];
-  enabled: boolean;
-  priority: number;
-  icon: string;
-  color: string;
-}
-
-interface VoiceCommandExample {
   command: string;
-  description: string;
-  mcpServers: string[];
+  status: 'listening' | 'processing' | 'executing' | 'completed' | 'failed';
+  timestamp: Date;
+  result?: {
+    action: string;
+    mcpServer: string;
+    transactionHash?: string;
+    error?: string;
+  };
 }
 
 export default function VoiceCommandsScreen() {
-  const [mcpServers, setMcpServers] = useState<MCPServer[]>([
-    {
-      id: 'uniswap',
-      name: 'UniswapMCP',
-      description: 'Decentralized exchange on Ethereum mainnet',
-      capabilities: ['swap', 'liquidity', 'price-check'],
-      chains: ['Ethereum'],
-      enabled: true,
-      priority: 1,
-      icon: 'swap-horizontal',
-      color: '#FF007A',
-    },
-    {
-      id: 'quickswap',
-      name: 'QuickSwapMCP',
-      description: 'Decentralized exchange on Polygon network',
-      capabilities: ['swap', 'liquidity', 'price-check'],
-      chains: ['Polygon'],
-      enabled: true,
-      priority: 2,
-      icon: 'flash',
-      color: '#8247E5',
-    },
-    {
-      id: 'polygon-bridge',
-      name: 'PolygonBridgeMCP',
-      description: 'Bridge assets between Ethereum and Polygon',
-      capabilities: ['bridge', 'cross-chain'],
-      chains: ['Ethereum', 'Polygon'],
-      enabled: true,
-      priority: 3,
-      icon: 'git-branch',
-      color: '#8247E5',
-    },
-    {
-      id: 'aave',
-      name: 'AaveMCP',
-      description: 'Lending and borrowing protocol',
-      capabilities: ['lend', 'borrow', 'yield'],
-      chains: ['Ethereum', 'Polygon'],
-      enabled: false,
-      priority: 4,
-      icon: 'trending-up',
-      color: '#B6509E',
-    },
-    {
-      id: 'compound',
-      name: 'CompoundMCP',
-      description: 'Decentralized lending protocol',
-      capabilities: ['lend', 'borrow', 'yield'],
-      chains: ['Ethereum'],
-      enabled: false,
-      priority: 5,
-      icon: 'library',
-      color: '#00D395',
-    },
-  ]);
+  const [isListening, setIsListening] = useState(false);
+  const [currentCommand, setCurrentCommand] = useState<VoiceCommand | null>(null);
+  const [commandHistory, setCommandHistory] = useState<VoiceCommand[]>([]);
+  const pulseAnim = new Animated.Value(1);
+  const waveAnim = new Animated.Value(0);
 
-  const [voiceCommandExamples] = useState<VoiceCommandExample[]>([
-    {
-      command: 'Buy 5 ETH on Polygon',
-      description: 'Purchase ETH on Polygon network using best available DEX',
-      mcpServers: ['QuickSwapMCP', 'PolygonBridgeMCP'],
-    },
-    {
-      command: 'Swap 100 USDC for ETH',
-      description: 'Exchange USDC for ETH on the most cost-effective platform',
-      mcpServers: ['UniswapMCP', 'QuickSwapMCP'],
-    },
-    {
-      command: 'Bridge 2 ETH to Polygon',
-      description: 'Transfer ETH from Ethereum mainnet to Polygon network',
-      mcpServers: ['PolygonBridgeMCP'],
-    },
-    {
-      command: 'Lend 1000 USDC on Aave',
-      description: 'Supply USDC to Aave protocol for yield generation',
-      mcpServers: ['AaveMCP'],
-    },
-    {
-      command: 'Check ETH price',
-      description: 'Get current ETH price across different exchanges',
-      mcpServers: ['UniswapMCP', 'QuickSwapMCP'],
-    },
-  ]);
-
-  const toggleMCPServer = (serverId: string) => {
-    setMcpServers(prev => 
-      prev.map(server => 
-        server.id === serverId 
-          ? { ...server, enabled: !server.enabled }
-          : server
-      )
-    );
-  };
-
-  const updateServerPriority = (serverId: string, direction: 'up' | 'down') => {
-    setMcpServers(prev => {
-      const servers = [...prev];
-      const serverIndex = servers.findIndex(s => s.id === serverId);
-      const server = servers[serverIndex];
+  useEffect(() => {
+    if (isListening) {
+      // Pulse animation for microphone
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {
+            toValue: 1.3,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 1,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
       
-      if (direction === 'up' && server.priority > 1) {
-        const otherServer = servers.find(s => s.priority === server.priority - 1);
-        if (otherServer) {
-          otherServer.priority += 1;
-          server.priority -= 1;
-        }
-      } else if (direction === 'down' && server.priority < servers.length) {
-        const otherServer = servers.find(s => s.priority === server.priority + 1);
-        if (otherServer) {
-          otherServer.priority -= 1;
-          server.priority += 1;
-        }
-      }
-      
-      return servers.sort((a, b) => a.priority - b.priority);
-    });
-  };
+      // Wave animation for sound visualization
+      Animated.loop(
+        Animated.timing(waveAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        })
+      ).start();
+    } else {
+      pulseAnim.setValue(1);
+      waveAnim.setValue(0);
+    }
+  }, [isListening]);
 
-  const handleTestVoiceCommand = () => {
-    Alert.alert(
-      'Test Voice Command',
-      'This will simulate a voice command to test your MCP server configuration.',
-      [
-        {
-          text: 'Test "Buy 1 ETH"',
-          onPress: () => {
-            Alert.alert('AI Agent Decision', 
-              `Selected: ${mcpServers.find(s => s.enabled && s.chains.includes('Ethereum'))?.name || 'No suitable MCP server'}\n\nReasoning: Highest priority enabled server for Ethereum transactions.`
-            );
-          },
-        },
-        { text: 'Cancel', style: 'cancel' },
-      ]
-    );
+  const handleVoiceCommand = () => {
+    if (isListening) {
+      // Stop listening
+      setIsListening(false);
+      return;
+    }
+
+    // Start listening
+    setIsListening(true);
+    
+    // Simulate voice command processing
+    setTimeout(() => {
+      const mockCommand: VoiceCommand = {
+        id: Date.now().toString(),
+        command: 'Send 2 rBTC to bob.eth',
+        status: 'processing',
+        timestamp: new Date(),
+      };
+      
+      setCurrentCommand(mockCommand);
+      setIsListening(false);
+
+      // Simulate processing stages
+      setTimeout(() => {
+        setCurrentCommand(prev => prev ? {
+          ...prev,
+          status: 'executing',
+          result: {
+            action: 'Transfer 2 rBTC to bob.eth',
+            mcpServer: 'RootstockMCP',
+          }
+        } : null);
+
+        setTimeout(() => {
+          const completedCommand: VoiceCommand = {
+            ...mockCommand,
+            status: 'completed',
+            result: {
+              action: 'Transfer 2 rBTC to bob.eth',
+              mcpServer: 'RootstockMCP',
+              transactionHash: '0x1234...5678',
+            }
+          };
+          
+          setCurrentCommand(completedCommand);
+          setCommandHistory(prev => [completedCommand, ...prev]);
+          
+          // Clear current command after 3 seconds
+          setTimeout(() => {
+            setCurrentCommand(null);
+          }, 3000);
+        }, 2000);
+      }, 2000);
+    }, 3000);
+  };
+  
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed': return '#4CAF50';
+      case 'processing': return '#FF9500';
+      case 'executing': return '#2196F3';
+      case 'failed': return '#F44336';
+      default: return '#666';
+    }
+  };
+  
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <View style={styles.content}>
-          {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.title}>Voice Commands & MCP</Text>
-            <Text style={styles.subtitle}>
-              Configure AI agent preferences for voice-controlled trading
-            </Text>
-          </View>
-
-          {/* Test Voice Command */}
-          <TouchableOpacity style={styles.testButton} onPress={handleTestVoiceCommand}>
-            <Ionicons name="mic" size={20} color="white" />
-            <Text style={styles.testButtonText}>Test Voice Command</Text>
-            <Ionicons name="play" size={16} color="white" />
+      <View style={styles.content}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
+            <Ionicons name="arrow-back" size={24} color="white" />
           </TouchableOpacity>
+          <Text style={styles.title}>Voice Commands</Text>
+          <View style={styles.placeholder} />
+        </View>
 
-          {/* MCP Servers Configuration */}
-          <View style={styles.mcpSection}>
-            <Text style={styles.sectionTitle}>MCP Server Preferences</Text>
-            <Text style={styles.sectionSubtitle}>
-              AI agent will choose servers based on priority and availability
-            </Text>
+        {/* Voice Interface */}
+        <View style={styles.voiceInterface}>
+          <Text style={styles.instructionText}>
+            {isListening ? 'Listening... Speak your command' : 'Tap the microphone and speak'}
+          </Text>
+          
+          {/* Sound Wave Visualization */}
+          {isListening && (
+            <View style={styles.waveContainer}>
+              {[...Array(5)].map((_, index) => (
+                <Animated.View
+                  key={index}
+                  style={[
+                    styles.waveBars,
+                    {
+                      transform: [{
+                        scaleY: waveAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [0.3, 1 + Math.random() * 0.5],
+                        })
+                      }],
+                      animationDelay: `${index * 100}ms`,
+                    }
+                  ]}
+                />
+              ))}
+            </View>
+          )}
+          
+          {/* Voice Button */}
+          <TouchableOpacity
+            style={[styles.voiceButton, isListening && styles.voiceButtonActive]}
+            onPress={handleVoiceCommand}
+          >
+            <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+              <Ionicons
+                name={isListening ? 'mic' : 'mic-outline'}
+                size={64}
+                color={isListening ? '#FF9500' : 'white'}
+              />
+            </Animated.View>
+          </TouchableOpacity>
+          
+          <Text style={styles.hintText}>
+            Try: "Send 2 rBTC to alice.eth" or "Check my balance"
+          </Text>
+        </View>
+
+        {/* Current Command Status */}
+        {currentCommand && (
+          <View style={styles.commandStatus}>
+            <View style={styles.commandHeader}>
+              <Text style={styles.commandText}>"{currentCommand.command}"</Text>
+              <View style={[styles.statusBadge, { backgroundColor: getStatusColor(currentCommand.status) }]}>
+                <Text style={styles.statusText}>{currentCommand.status}</Text>
+              </View>
+            </View>
             
-            {mcpServers.map((server) => (
-              <View key={server.id} style={styles.serverCard}>
-                <View style={styles.serverHeader}>
-                  <View style={[styles.serverIcon, { backgroundColor: server.color }]}>
-                    <Ionicons name={server.icon as any} size={20} color="white" />
-                  </View>
-                  <View style={styles.serverInfo}>
-                    <Text style={styles.serverName}>{server.name}</Text>
-                    <Text style={styles.serverDescription}>{server.description}</Text>
-                    <View style={styles.serverTags}>
-                      {server.capabilities.slice(0, 2).map((cap, index) => (
-                        <View key={index} style={styles.capabilityTag}>
-                          <Text style={styles.capabilityText}>{cap}</Text>
-                        </View>
-                      ))}
-                    </View>
-                  </View>
-                  <Switch
-                    value={server.enabled}
-                    onValueChange={() => toggleMCPServer(server.id)}
-                    trackColor={{ false: '#767577', true: '#FF9500' }}
-                    thumbColor={server.enabled ? '#f4f3f4' : '#f4f3f4'}
-                  />
-                </View>
-                
-                {server.enabled && (
-                  <View style={styles.serverControls}>
-                    <View style={styles.prioritySection}>
-                      <Text style={styles.priorityLabel}>Priority: {server.priority}</Text>
-                      <View style={styles.priorityButtons}>
-                        <TouchableOpacity
-                          style={styles.priorityButton}
-                          onPress={() => updateServerPriority(server.id, 'up')}
-                          disabled={server.priority === 1}
-                        >
-                          <Ionicons name="chevron-up" size={16} color={server.priority === 1 ? '#666' : '#FF9500'} />
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={styles.priorityButton}
-                          onPress={() => updateServerPriority(server.id, 'down')}
-                          disabled={server.priority === mcpServers.length}
-                        >
-                          <Ionicons name="chevron-down" size={16} color={server.priority === mcpServers.length ? '#666' : '#FF9500'} />
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                    
-                    <View style={styles.chainsSection}>
-                      <Text style={styles.chainsLabel}>Supported Chains:</Text>
-                      <View style={styles.chainTags}>
-                        {server.chains.map((chain, index) => (
-                          <View key={index} style={styles.chainTag}>
-                            <Text style={styles.chainText}>{chain}</Text>
-                          </View>
-                        ))}
-                      </View>
-                    </View>
-                  </View>
+            {currentCommand.result && (
+              <View style={styles.commandResult}>
+                <Text style={styles.resultText}>🤖 {currentCommand.result.action}</Text>
+                <Text style={styles.mcpText}>via {currentCommand.result.mcpServer}</Text>
+                {currentCommand.result.transactionHash && (
+                  <Text style={styles.hashText}>Tx: {currentCommand.result.transactionHash}</Text>
                 )}
               </View>
-            ))}
+            )}
           </View>
-
-          {/* Voice Command Examples */}
-          <View style={styles.examplesSection}>
-            <Text style={styles.sectionTitle}>Voice Command Examples</Text>
-            <Text style={styles.sectionSubtitle}>
-              Try these commands to interact with your crypto portfolio
-            </Text>
-            
-            {voiceCommandExamples.map((example, index) => (
-              <View key={index} style={styles.exampleCard}>
-                <Text style={styles.exampleCommand}>"{example.command}"</Text>
-                <Text style={styles.exampleDescription}>{example.description}</Text>
-                <View style={styles.exampleServers}>
-                  <Text style={styles.exampleServersLabel}>Uses MCP Servers:</Text>
-                  <View style={styles.serversList}>
-                    {example.mcpServers.map((serverName, idx) => (
-                      <View key={idx} style={styles.serverTag}>
-                        <Text style={styles.serverTagText}>{serverName}</Text>
-                      </View>
-                    ))}
-                  </View>
+        )}
+        
+        {/* Command History */}
+        {commandHistory.length > 0 && (
+          <View style={styles.historySection}>
+            <Text style={styles.historyTitle}>Recent Commands</Text>
+            {commandHistory.slice(0, 3).map((cmd) => (
+              <View key={cmd.id} style={styles.historyItem}>
+                <View style={styles.historyHeader}>
+                  <Text style={styles.historyCommand}>"{cmd.command}"</Text>
+                  <Text style={styles.historyTime}>{formatTime(cmd.timestamp)}</Text>
+                </View>
+                <View style={[styles.historyStatus, { backgroundColor: getStatusColor(cmd.status) }]}>
+                  <Text style={styles.historyStatusText}>{cmd.status}</Text>
                 </View>
               </View>
             ))}
           </View>
-
-          {/* AI Agent Settings */}
-          <View style={styles.aiSection}>
-            <Text style={styles.sectionTitle}>AI Agent Settings</Text>
-            
-            <View style={styles.settingCard}>
-              <View style={styles.settingHeader}>
-                <Ionicons name="flash" size={20} color="#FF9500" />
-                <Text style={styles.settingTitle}>Auto-Execute Trades</Text>
-              </View>
-              <Text style={styles.settingDescription}>
-                Allow AI agent to execute trades automatically after bank confirmation
-              </Text>
-              <Switch
-                value={true}
-                trackColor={{ false: '#767577', true: '#FF9500' }}
-                thumbColor={'#f4f3f4'}
-              />
-            </View>
-
-            <View style={styles.settingCard}>
-              <View style={styles.settingHeader}>
-                <Ionicons name="shield-checkmark" size={20} color="#4CAF50" />
-                <Text style={styles.settingTitle}>Confirmation Required</Text>
-              </View>
-              <Text style={styles.settingDescription}>
-                Require manual confirmation for transactions above $1,000
-              </Text>
-              <Switch
-                value={true}
-                trackColor={{ false: '#767577', true: '#4CAF50' }}
-                thumbColor={'#f4f3f4'}
-              />
-            </View>
-          </View>
-        </View>
-      </ScrollView>
+        )}
+      </View>
     </SafeAreaView>
   );
 }
@@ -327,227 +245,169 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#2C2C2E',
   },
-  scrollView: {
-    flex: 1,
-  },
   content: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 40,
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingTop: 60,
   },
   header: {
-    marginBottom: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 40,
+  },
+  backButton: {
+    padding: 8,
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     color: 'white',
-    marginBottom: 8,
   },
-  subtitle: {
-    fontSize: 16,
+  placeholder: {
+    width: 40,
+  },
+  voiceInterface: {
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  instructionText: {
+    fontSize: 18,
     color: '#A0A0A0',
-    lineHeight: 22,
+    textAlign: 'center',
+    marginBottom: 40,
   },
-  testButton: {
-    backgroundColor: '#FF9500',
-    borderRadius: 12,
-    padding: 16,
+  waveContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 32,
+    height: 60,
+    marginBottom: 40,
   },
-  testButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-    marginHorizontal: 8,
+  waveBars: {
+    width: 4,
+    height: 40,
+    backgroundColor: '#FF9500',
+    marginHorizontal: 2,
+    borderRadius: 2,
   },
-  mcpSection: {
-    marginBottom: 32,
+  voiceButton: {
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    backgroundColor: '#3C3C3E',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 3,
+    borderColor: 'transparent',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+    marginBottom: 20,
   },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: 'white',
-    marginBottom: 8,
+  voiceButtonActive: {
+    borderColor: '#FF9500',
+    backgroundColor: '#4A3C2A',
   },
-  sectionSubtitle: {
+  hintText: {
     fontSize: 14,
-    color: '#A0A0A0',
-    marginBottom: 16,
+    color: '#666',
+    textAlign: 'center',
+    paddingHorizontal: 40,
     lineHeight: 20,
   },
-  serverCard: {
+  commandStatus: {
     backgroundColor: '#3C3C3E',
     borderRadius: 12,
     padding: 16,
-    marginBottom: 12,
+    marginBottom: 24,
   },
-  serverHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  serverIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  serverInfo: {
-    flex: 1,
-  },
-  serverName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: 'white',
-    marginBottom: 4,
-  },
-  serverDescription: {
-    fontSize: 14,
-    color: '#A0A0A0',
-    marginBottom: 8,
-  },
-  serverTags: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  capabilityTag: {
-    backgroundColor: '#2A2A2C',
-    borderRadius: 12,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    marginRight: 6,
-    marginBottom: 4,
-  },
-  capabilityText: {
-    fontSize: 12,
-    color: '#FF9500',
-  },
-  serverControls: {
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#2A2A2C',
-  },
-  prioritySection: {
+  commandHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 12,
   },
-  priorityLabel: {
-    fontSize: 14,
-    color: '#A0A0A0',
+  commandText: {
+    fontSize: 16,
+    color: 'white',
+    fontStyle: 'italic',
+    flex: 1,
   },
-  priorityButtons: {
-    flexDirection: 'row',
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
-  priorityButton: {
-    padding: 4,
-    marginLeft: 8,
+  statusText: {
+    fontSize: 12,
+    color: 'white',
+    fontWeight: '500',
   },
-  chainsSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-  },
-  chainsLabel: {
-    fontSize: 14,
-    color: '#A0A0A0',
-    marginRight: 8,
-  },
-  chainTags: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  chainTag: {
+  commandResult: {
     backgroundColor: '#2A2A2C',
     borderRadius: 8,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    marginRight: 4,
+    padding: 12,
   },
-  chainText: {
+  resultText: {
+    fontSize: 14,
+    color: '#FF9500',
+    marginBottom: 4,
+  },
+  mcpText: {
+    fontSize: 12,
+    color: '#A0A0A0',
+    marginBottom: 4,
+  },
+  hashText: {
     fontSize: 12,
     color: '#4CAF50',
   },
-  examplesSection: {
-    marginBottom: 32,
-  },
-  exampleCard: {
-    backgroundColor: '#3C3C3E',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-  },
-  exampleCommand: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FF9500',
-    marginBottom: 8,
-    fontStyle: 'italic',
-  },
-  exampleDescription: {
-    fontSize: 14,
-    color: '#A0A0A0',
-    marginBottom: 12,
-    lineHeight: 20,
-  },
-  exampleServers: {
-    marginTop: 8,
-  },
-  exampleServersLabel: {
-    fontSize: 12,
-    color: '#A0A0A0',
-    marginBottom: 6,
-  },
-  serversList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  serverTag: {
-    backgroundColor: '#2A2A2C',
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    marginRight: 6,
-    marginBottom: 4,
-  },
-  serverTagText: {
-    fontSize: 12,
-    color: '#FF9500',
-  },
-  aiSection: {
-    marginBottom: 32,
-  },
-  settingCard: {
-    backgroundColor: '#3C3C3E',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  settingHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  historySection: {
     flex: 1,
   },
-  settingTitle: {
-    fontSize: 16,
+  historyTitle: {
+    fontSize: 18,
     fontWeight: '600',
     color: 'white',
-    marginLeft: 8,
-    marginBottom: 4,
+    marginBottom: 16,
   },
-  settingDescription: {
+  historyItem: {
+    backgroundColor: '#3C3C3E',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+  },
+  historyHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  historyCommand: {
     fontSize: 14,
-    color: '#A0A0A0',
+    color: 'white',
+    fontStyle: 'italic',
     flex: 1,
-    marginLeft: 28,
+  },
+  historyTime: {
+    fontSize: 12,
+    color: '#666',
+  },
+  historyStatus: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  historyStatusText: {
+    fontSize: 12,
+    color: 'white',
+    fontWeight: '500',
   },
 });
