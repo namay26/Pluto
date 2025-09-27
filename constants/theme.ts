@@ -1,12 +1,12 @@
 /**
  * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ * Redesigned to match the modern financial app design with dark green/teal theme.
  */
 
 import { Platform } from 'react-native';
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+const tintColorLight = '#00D4AA';
+const tintColorDark = '#00D4AA';
 
 export const Colors = {
   light: {
@@ -18,13 +18,45 @@ export const Colors = {
     tabIconSelected: tintColorLight,
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
+    text: '#FFFFFF',
+    background: '#0A0F0D',
     tint: tintColorDark,
     icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
+    tabIconDefault: '#6B7280',
     tabIconSelected: tintColorDark,
   },
+};
+
+// Modern Financial App Color Palette
+export const AppColors = {
+  // Background colors
+  primary: '#0A0F0D',        // Main dark background
+  secondary: '#1A2B23',      // Card backgrounds
+  tertiary: '#2D4A3A',       // Elevated surfaces
+  
+  // Accent colors
+  accent: '#00D4AA',         // Primary teal/green
+  accentLight: '#4AE5C7',    // Lighter teal
+  accentDark: '#00B894',     // Darker teal
+  
+  // Status colors
+  success: '#00D4AA',        // Green for positive
+  warning: '#FFD93D',        // Yellow for warnings
+  danger: '#FF6B6B',         // Red for negative
+  info: '#74B9FF',           // Blue for info
+  
+  // Text colors
+  textPrimary: '#FFFFFF',    // Main text
+  textSecondary: '#9CA3AF',  // Secondary text
+  textMuted: '#6B7280',      // Muted text
+  
+  // Border colors
+  border: '#374151',         // Default borders
+  borderLight: '#4B5563',    // Light borders
+  
+  // Utility colors
+  overlay: 'rgba(0, 0, 0, 0.5)',
+  shadow: 'rgba(0, 0, 0, 0.25)',
 };
 
 export const Fonts = Platform.select({

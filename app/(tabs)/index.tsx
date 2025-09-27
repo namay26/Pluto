@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { Dimensions, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { AppColors } from '@/constants/theme';
 
 const { width } = Dimensions.get('window');
 
@@ -50,7 +51,7 @@ export default function HomeScreen() {
   };
 
   const handleNext = () => {
-    router.push('/(tabs)/signup');
+    router.push('/(tabs)/dashboard');
   };
 
   return (
@@ -109,7 +110,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#2C2C2E',
+    backgroundColor: AppColors.primary,
   },
   content: {
     flex: 1,
@@ -139,10 +140,10 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: '#4A90E2',
+    backgroundColor: AppColors.accent,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: AppColors.shadow,
     shadowOffset: {
       width: 0,
       height: 4,
@@ -158,13 +159,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: 'white',
+    color: AppColors.textPrimary,
     marginBottom: 16,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
-    color: '#A0A0A0',
+    color: AppColors.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
     paddingHorizontal: 20,
@@ -180,15 +181,15 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#4A4A4A',
+    backgroundColor: AppColors.textMuted,
   },
   progressDotActive: {
-    backgroundColor: '#FF9500',
+    backgroundColor: AppColors.accent,
     width: 24,
     borderRadius: 12,
   },
   nextButton: {
-    backgroundColor: '#FF9500',
+    backgroundColor: AppColors.accent,
     paddingVertical: 16,
     paddingHorizontal: 60,
     borderRadius: 25,
@@ -197,7 +198,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 40,
   },
   nextButtonText: {
-    color: 'white',
+    color: AppColors.textPrimary,
     fontSize: 15,
     fontWeight: '600',
   },
