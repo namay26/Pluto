@@ -19,8 +19,6 @@
 
 ## About The Project
 
-<img width="2396" height="1229" alt="image" src="https://github.com/user-attachments/assets/33ab66e7-72a7-4748-a8fa-bfcbb37fac86" />
-
 
  Sandstone provides Layer-0 intent settlement infrastructure - Built on Anthropic's Model Context Protocol, we handle orderflow execution, cross-chain bridging, swaps, and transaction management so developers don't have to
 Deploy master agents with specialized MCP tools - Our intelligent agents automatically invoke the right tools for specific actions like sending transactions, bridging assets, or executing swaps with guaranteed settlement
@@ -57,7 +55,8 @@ User onboarding friction - Traditional crypto apps have steep learning curves, b
 
 ## User Flow / Architecture
 
-![Project Architecture](assets\images\userflow.png "Architecture Diagram")
+<img width="2396" height="1229" alt="image" src="https://github.com/user-attachments/assets/09690911-259c-48f7-93f6-68a942febe4f" />
+
 
 ## Contract Addresses
 
