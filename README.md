@@ -28,12 +28,7 @@ Offer native integrations out-of-the-box - Seamlessly connect with payment gatew
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-### Built With
 
-[Next.js]: https://img.shields.io/badge/Next.js-black?style=for-the-badge&logo=next.js
-[React.js]: https://img.shields.io/badge/React-blue?style=for-the-badge&logo=react
-[Next-url]: https://nextjs.org/
-[React-url]: https://reactjs.org/
 
  - **Solidity**
  - **React Native**
@@ -65,6 +60,6 @@ User onboarding friction - Traditional crypto apps have steep learning curves, b
 
 ## Contract Addresses
 
-### Rootstock Sepolia Testnet
+### Rootstock Testnet
 
 - WalletManager.sol : `0x9E5B2a1D37802B56804Fb5f4460f5C103309B9D2`
