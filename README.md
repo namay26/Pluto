@@ -63,3 +63,6 @@ User onboarding friction - Traditional crypto apps have steep learning curves, b
 ### Rootstock Testnet
 
 - WalletManager.sol : `0x9E5B2a1D37802B56804Fb5f4460f5C103309B9D2`
+
+### Gitbook link 
+https://app.gitbook.com/o/8RwZ76Bcg5z5wTb1bQdT/s/C84moJ2b404Iw80UXjn3/basics/markdown
