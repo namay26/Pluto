@@ -18,7 +18,7 @@
 </details>
 
 ## About The Project
-
+![about](assets/images/about.jpg)
 
  Sandstone provides Layer-0 intent settlement infrastructure - Built on Anthropic's Model Context Protocol, we handle orderflow execution, cross-chain bridging, swaps, and transaction management so developers don't have to
 Deploy master agents with specialized MCP tools - Our intelligent agents automatically invoke the right tools for specific actions like sending transactions, bridging assets, or executing swaps with guaranteed settlement
