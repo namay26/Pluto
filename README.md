@@ -1,4 +1,4 @@
-# TollChain
+# SandStone
 
 ![logo](assets/logo.png)
 
