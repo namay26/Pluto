@@ -12,8 +12,32 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+// Mock sendFunds function for React Native environment
+interface GetFundsInput {
+  receiverAddress: string;
+  amountToSend: string;
+  maxFeePerGas?: string;
+  maxPriorityFeePerGas?: string;
+}
+
+const sendFunds = async (transactionDetails: GetFundsInput) => {
+  // Simulate blockchain transaction for demo
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  
+  // Generate mock transaction hash
+  const mockHash = '0x' + Math.random().toString(16).substr(2, 64);
+  
+  return {
+    content: [
+      {
+        type: "text",
+        text: `Transaction Hash: ${mockHash}`,
+      },
+    ],
+  };
+};
 
 interface UserData {
   ensName: string;
@@ -26,7 +50,9 @@ export default function DashboardScreen() {
   const [inputText, setInputText] = useState('');
   const [showSendModal, setShowSendModal] = useState(false);
   const [showSwapModal, setShowSwapModal] = useState(false);
-  const [userData] = useState<UserData>({
+  const [isTransactionLoading, setIsTransactionLoading] = useState(false);
+  const [transactionStatus, setTransactionStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [userData, setUserData] = useState<UserData>({
     ensName: 'aryan.eth',
     walletAddress: '0x742d35Cc6634C0532925a3b8D0C9e3e4c413c123',
     balance: '0.00166 rBTC', // Rootstock Bitcoin
@@ -76,11 +102,83 @@ export default function DashboardScreen() {
     router.push('/(tabs)/explore');
   };
 
-  const handleApprove = () => {
+  const parseSendCommand = (text: string): { amount: string; address: string } | null => {
+    // Parse commands like "send 0.1 to 0x123..." or "send 0.1 rBTC to alice.eth"
+    const sendRegex = /send\s+(\d+(?:\.\d+)?)\s+(?:rbtc\s+)?to\s+([a-zA-Z0-9.]+)/i;
+    const match = text.match(sendRegex);
+    
+    if (match) {
+      const amount = match[1];
+      let address = match[2];
+      
+      // If it's an ENS name, convert to address (for demo, use a hardcoded address)
+      if (address.includes('.eth')) {
+        address = '0x8ba1f109551bD432803012645Hac136c22C177c9'; // College address
+      }
+      
+      return { amount, address };
+    }
+    
+    return null;
+  };
+
+  const handleSendTransaction = async (amount: string, address: string) => {
+    setIsTransactionLoading(true);
+    setTransactionStatus('idle');
+    
+    try {
+      const transactionDetails: GetFundsInput = {
+        receiverAddress: address,
+        amountToSend: amount,
+        maxFeePerGas: '20',
+        maxPriorityFeePerGas: '2'
+      };
+      
+      const result = await sendFunds(transactionDetails);
+      
+      // Extract transaction hash from result
+      const hash = result.content[0]?.text?.replace('Transaction Hash: ', '') || '';
+      setTransactionStatus('success');
+      
+      // Update balance (subtract sent amount)
+      const currentBalance = parseFloat(userData.balance.replace(' rBTC', ''));
+      const newBalance = (currentBalance - parseFloat(amount)).toFixed(5);
+      setUserData(prev => ({ ...prev, balance: `${newBalance} rBTC` }));
+      
+      Alert.alert(
+        'Transaction Successful!',
+        `Sent ${amount} rBTC to ${address}\n\nTransaction Hash: ${hash.slice(0, 10)}...`,
+        [{ text: 'OK' }]
+      );
+      
+    } catch (error) {
+      setTransactionStatus('error');
+      console.error('Transaction failed:', error);
+      Alert.alert(
+        'Transaction Failed',
+        error instanceof Error ? error.message : 'Unknown error occurred',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setIsTransactionLoading(false);
+    }
+  };
+
+  const handleApprove = async () => {
     const text = inputText.toLowerCase().trim();
     
     if (text.includes('send')) {
-      setShowSendModal(true);
+      const sendData = parseSendCommand(text);
+      
+      if (sendData) {
+        await handleSendTransaction(sendData.amount, sendData.address);
+      } else {
+        Alert.alert(
+          'Invalid Send Command',
+          'Please use format: "send [amount] to [address]"\nExample: "send 0.1 to 0x123..." or "send 0.1 to alice.eth"',
+          [{ text: 'OK' }]
+        );
+      }
     } else if (text.includes('swap')) {
       setShowSwapModal(true);
     }
@@ -100,7 +198,12 @@ export default function DashboardScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.content}>
         {/* ENS Tag & Greeting */}
         <View style={styles.header}>
           <View style={styles.ensContainer}>
@@ -145,13 +248,45 @@ export default function DashboardScreen() {
             multiline
           />
           
+          {/* Transaction Status */}
+          {isTransactionLoading && (
+            <View style={styles.transactionStatus}>
+              <ActivityIndicator size="small" color="#FF9500" />
+              <Text style={styles.transactionStatusText}>Processing transaction...</Text>
+            </View>
+          )}
+          
+          {transactionStatus === 'success' && (
+            <View style={[styles.transactionStatus, styles.transactionSuccess]}>
+              <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
+              <Text style={[styles.transactionStatusText, { color: '#4CAF50' }]}>Transaction successful!</Text>
+            </View>
+          )}
+          
+          {transactionStatus === 'error' && (
+            <View style={[styles.transactionStatus, styles.transactionError]}>
+              <Ionicons name="close-circle" size={20} color="#FF4444" />
+              <Text style={[styles.transactionStatusText, { color: '#FF4444' }]}>Transaction failed</Text>
+            </View>
+          )}
+
           {/* Approve Button */}
           <TouchableOpacity
-            style={[styles.approveButton, !inputText.trim() && styles.approveButtonDisabled]}
+            style={[
+              styles.approveButton, 
+              (!inputText.trim() || isTransactionLoading) && styles.approveButtonDisabled
+            ]}
             onPress={handleApprove}
-            disabled={!inputText.trim()}
+            disabled={!inputText.trim() || isTransactionLoading}
           >
-            <Text style={styles.approveButtonText}>Approve</Text>
+            {isTransactionLoading ? (
+              <>
+                <ActivityIndicator size="small" color="white" style={{ marginRight: 8 }} />
+                <Text style={styles.approveButtonText}>Processing...</Text>
+              </>
+            ) : (
+              <Text style={styles.approveButtonText}>Approve</Text>
+            )}
           </TouchableOpacity>
         </View>
 
@@ -171,6 +306,7 @@ export default function DashboardScreen() {
           </Text>
         </View>
       </View>
+      </ScrollView>
       
       {/* Send Modal */}
       <Modal
@@ -249,11 +385,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#2C2C2E',
   },
-  content: {
+  scrollView: {
     flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
+  content: {
     paddingHorizontal: 24,
     paddingTop: 60,
-    justifyContent: 'space-between',
+    paddingBottom: 20,
   },
   header: {
     flexDirection: 'row',
@@ -381,15 +522,39 @@ const styles = StyleSheet.create({
   },
   approveButtonText: {
     color: 'white',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
+  },
+  transactionStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#3C3C3E',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+    gap: 8,
+  },
+  transactionSuccess: {
+    backgroundColor: '#1A2B23',
+    borderWidth: 1,
+    borderColor: '#4CAF50',
+  },
+  transactionError: {
+    backgroundColor: '#2B1A1A',
+    borderWidth: 1,
+    borderColor: '#FF4444',
+  },
+  transactionStatusText: {
+    color: '#A0A0A0',
+    fontSize: 14,
+    fontWeight: '500',
     textAlign: 'center',
   },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     justifyContent: 'center',
-    alignItems: 'center',
   },
   modalContent: {
     backgroundColor: '#2C2C2E',

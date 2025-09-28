@@ -24,10 +24,8 @@ const HARDCODED_CONFIG = {
   exchangeRate: '86206.90' // INR per rBTC (approx $2600 * 83 INR/USD)
 };
 
-type TabType = 'buy' | 'sell' | 'swap';
 
 export default function FiatToRBTCScreen() {
-  const [activeTab, setActiveTab] = useState<TabType>('buy');
   const [isProcessing, setIsProcessing] = useState(false);
   const [transferStatus, setTransferStatus] = useState<'idle' | 'processing' | 'completed'>('idle');
 
