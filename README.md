@@ -1,50 +1,70 @@
-# Welcome to your Expo app 👋
+# TollChain
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+![logo](assets/logo.png)
 
-## Get started
+<!-- TABLE OF CONTENTS -->
+<details>
+  <summary>Table of Contents</summary>
+  <ol>
+    <li>
+      <a href="#about-the-project">About The Project</a>
+      <ul>
+        <li><a href="#built-with">Built With</a></li>
+      </ul>
+    </li>
+    <li><a href="#constituents">Constituents</a></li>
+    <li><a href="#problems-we-solve">Problems We Solve</a></li>
+  </ol>
+</details>
 
-1. Install dependencies
+## About The Project
 
-   ```bash
-   npm install
-   ```
+![cover](assets/about.png)
 
-2. Start the app
+ Sandstone provides Layer-0 intent settlement infrastructure - Built on Anthropic's Model Context Protocol, we handle orderflow execution, cross-chain bridging, swaps, and transaction management so developers don't have to
+Deploy master agents with specialized MCP tools - Our intelligent agents automatically invoke the right tools for specific actions like sending transactions, bridging assets, or executing swaps with guaranteed settlement
+Enable rapid application development - Cut development time from months to days by abstracting away foundational complexity, letting developers focus purely on business logic and user experience
+Offer native integrations out-of-the-box - Seamlessly connect with payment gateways (credit cards, UPI), ENS for contact management, voice interfaces, and bank accounts to maximize user onboarding and accessibility
 
-   ```bash
-   npx expo start
-   ```
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-In the output, you'll find options to open the app in a
+### Built With
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+[Next.js]: https://img.shields.io/badge/Next.js-black?style=for-the-badge&logo=next.js
+[React.js]: https://img.shields.io/badge/React-blue?style=for-the-badge&logo=react
+[Next-url]: https://nextjs.org/
+[React-url]: https://reactjs.org/
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+ - **Solidity**
+ - **React Native**
+ - **TypeScript**
+ - **Python**
 
-## Get a fresh project
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-When you're ready, run:
+## Constituents
 
-```bash
-npm run reset-project
-```
+SandStone is made up of following components:
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+- **MCP Subgraphs**
+- **React Native**
+- **Onchain Ramp**
+-
+## Problems We Solve
 
-## Learn more
+Infrastructure complexity - Developers waste months building basic transaction handling, cross-chain bridging, and settlement logic instead of focusing on their core business features
+Execution uncertainty - Applications struggle with unreliable transaction success rates, failed swaps, and unpredictable orderflow, creating poor user experiences
+Integration overhead - Building native support for payment gateways, ENS, contacts, and voice interfaces requires extensive development work across multiple domains
+User onboarding friction - Traditional crypto apps have steep learning curves, but you enable seamless experiences through familiar interfaces like voice commands and existing payment methods
 
-To learn more about developing your project with Expo, look at the following resources:
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## User Flow / Architecture
 
-## Join the community
+![Project Architecture](userflow.png "Architecture Diagram")
 
-Join our community of developers creating universal apps.
+## Contract Addresses
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+### Rootstock Sepolia Testnet
+
+- WalletManager.sol : `0x9E5B2a1D37802B56804Fb5f4460f5C103309B9D2`
