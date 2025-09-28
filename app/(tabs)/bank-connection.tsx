@@ -28,22 +28,13 @@ export default function FiatOnRampScreen() {
       time: '5-30 min'
     },
     { 
-      id: 'bank-transfer', 
-      name: 'Bank Transfer', 
-      description: 'Direct bank transfer',
+      id: 'Mock Simulation', 
+      name: 'Mock Simulation', 
+      description: 'Direct Testnet transfer',
       icon: 'business-outline', 
       color: '#4CAF50',
       fees: '0.5-1%',
       time: '1-3 days'
-    },
-    { 
-      id: 'credit-card', 
-      name: 'Credit/Debit Card', 
-      description: 'Instant purchase',
-      icon: 'card', 
-      color: '#FF9500',
-      fees: '3-5%',
-      time: 'Instant'
     },
   ];
 
@@ -83,6 +74,10 @@ export default function FiatOnRampScreen() {
           );
         }
       }, 30000); // 30 seconds demo timeout
+    } else if (onRampMethod === 'Mock Simulation') {
+      // Navigate to fiat-to-rBTC simulation screen
+      setOnRampStatus('idle'); // Reset status
+      router.push('/fiat-to-rbtc');
     } else {
       // Simulate other payment methods
       setTimeout(() => {

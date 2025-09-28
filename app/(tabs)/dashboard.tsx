@@ -1,16 +1,19 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
+  Alert,
   Animated,
+  Modal,
   SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
-  TextInput,
-  Modal
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface UserData {
   ensName: string;
@@ -26,9 +29,9 @@ export default function DashboardScreen() {
   const [userData] = useState<UserData>({
     ensName: 'aryan.eth',
     walletAddress: '0x742d35Cc6634C0532925a3b8D0C9e3e4c413c123',
-    balance: '2.45 rBTC', // Rootstock Bitcoin
+    balance: '0.00166 rBTC', // Rootstock Bitcoin
   });
-  const pulseAnim = new Animated.Value(1);
+  const pulseAnim = useMemo(() => new Animated.Value(1), []);
 
   useEffect(() => {
     if (isListening) {
@@ -49,7 +52,7 @@ export default function DashboardScreen() {
     } else {
       pulseAnim.setValue(1);
     }
-  }, [isListening]);
+  }, [isListening, pulseAnim]);
 
   const handleVoiceCommand = () => {
     if (isListening) {
@@ -108,10 +111,6 @@ export default function DashboardScreen() {
             <Text style={styles.ensName}>{userData.ensName}!</Text>
             <Text style={styles.balance}>{userData.balance}</Text>
           </View>
-          
-          <TouchableOpacity style={styles.logoutButton}>
-            <Ionicons name="log-out-outline" size={24} color="#A0A0A0" />
-          </TouchableOpacity>
         </View>
 
         {/* Voice Command Button */}
@@ -133,7 +132,7 @@ export default function DashboardScreen() {
           </TouchableOpacity>
           
           <Text style={styles.voiceHint}>
-            Try saying: "Send 2 ETH to alice.eth" or "Check my balance"
+            Try saying: &quot;Send 2 ETH to alice.eth&quot; or &quot;Check my balance&quot;
           </Text>
           
           {/* Text Input */}

@@ -111,12 +111,12 @@ export default function AuthenticationScreen() {
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       console.log(`🎉 SUCCESS! ${label}.eth has been registered!`);
-      console.log(`🏆 Registration completed successfully!`);
+      console.log(` Registration completed successfully!`);
       
       return true;
       
     } catch (error) {
-      console.error(`💥 REGISTRATION FAILED FOR ${name}:`, error);
+      console.error(` REGISTRATION FAILED FOR ${name}:`, error);
       return false;
     }
   }
@@ -189,8 +189,8 @@ export default function AuthenticationScreen() {
 
         // Register the ENS name
         Alert.alert(
-          '🚀 BULLETPROOF ENS REGISTRATION',
-          `${ensName} is AVAILABLE!\n\n💰 Balance: ${balance} ETH\n⏱️ Time: ~61 seconds (ENS security requirement)\n🛡️ This process is GUARANTEED to work if name stays available`,
+          'ENS REGISTRATION',
+          `\n ${ensName} is AVAILABLE!\n`,
           [
             {
               text: 'Cancel',
@@ -205,8 +205,8 @@ export default function AuthenticationScreen() {
                   
                   if (success) {
                     Alert.alert(
-                      '🏆 REGISTRATION SUCCESSFUL!',
-                      `🎉 ${ensName} is NOW YOURS!\n\n👤 Owner: ${walletAddress}\n\n🚀 Your ENS name is ready to use for payments and identity!`,
+                      'REGISTRATION SUCCESSFUL!',
+                      `\n ${ensName} is NOW YOURS!\n\n Owner: ${walletAddress}\n\n`,
                       [
                         {
                           text: 'Continue to Funding',
@@ -345,14 +345,6 @@ export default function AuthenticationScreen() {
                 <Text style={styles.onRampButtonText}>OnRamp</Text>
               )}
             </TouchableOpacity>
-
-            <Text style={styles.helpText}>
-              New users: Enter desired username (we'll add .eth and register it)
-              {"\n"}Existing users: Enter your full ENS name to login
-              {"\n"}Registration takes ~70 seconds due to ENS commit-reveal process
-              {"\n"}⚠️ Ensure your wallet has Sepolia ETH for registration fees
-              {"\n"}💰 Registration cost: ~0.003 ETH + gas fees
-            </Text>
           </View>
         </View>
       </ScrollView>
